@@ -1,0 +1,64 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="mycobot_280">
+    
+    <!-- Disable gravity -->
+    <gazebo>
+        <gravity>0 0 0</gravity>
+    </gazebo>
+    
+    <!-- Include the complete robot model -->
+    <xacro:include filename="$(find mycobot_gazebo)/urdf/ros2_control/gazebo/mycobot_280.urdf.xacro"/>
+    
+    <!-- ros2_control hardware interface -->
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+        
+        <joint name="link1_to_link2">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="link2_to_link3">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="link3_to_link4">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="link4_to_link5">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="link5_to_link6">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <joint name="link6_to_link6flange">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+    
+    <!-- Gazebo ros2_control plugin -->
+    <gazebo>
+        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+            <robot_param>robot_description</robot_param>
+            <robot_param_node>robot_state_publisher</robot_param_node>
+            <parameters>$(find mycobot_moveit_config)/config/ros2_controllers.yaml</parameters>
+        </plugin>
+    </gazebo>
+    
+</robot>

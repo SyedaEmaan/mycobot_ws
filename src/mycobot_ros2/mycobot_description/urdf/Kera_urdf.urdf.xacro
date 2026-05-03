@@ -1,0 +1,209 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="Kera_bot">
+
+  <xacro:property name="effort" value="5.0"/>
+  <xacro:property name="velocity" value="2.792527"/>
+
+  <link name="world"/>
+
+
+    <link name="Base-Joint-1">
+        <inertial>
+            <origin xyz="5.0384031204218303e-17 0.05851013110846246 5.010148893023872e-17" rpy="0.0 0.0 0.0" />
+            <mass value="10.345500227720205" />
+            <inertia ixx="0.02152083634063567" iyy="0.019080450218857403" izz="0.02152083634063513" ixy="-1.6111964015943992e-16" iyz="-1.5287691624653078e-16" ixz="-2.220446049250313e-16" />
+        </inertial>
+        <visual name="Base-Joint-1_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Base-Joint-1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Base-Joint-1_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Base-Joint-1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="Joint-2">
+        <inertial>
+            <origin xyz="0.0 0.07118557997385196 -0.0018174061909582901" rpy="0.0 0.0 0.0" />
+            <mass value="8.481009382139273" />
+            <inertia ixx="0.01681727894443069" iyy="0.014312633378827266" izz="0.01376007395993506" ixy="5.551115123125783e-17" iyz="0.0001358605250115167" ixz="-3.469446951953614e-18" />
+        </inertial>
+        <visual name="Joint-2_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-2.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Joint-2_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-2.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="Shoulder-Link">
+        <inertial>
+            <origin xyz="0.19352979990039623 -1.753886229136695e-17 0.023034780854865957" rpy="0.0 0.0 0.0" />
+            <mass value="10.98036043093456" />
+            <inertia ixx="0.006417750033621209" iyy="0.30860623392268705" izz="0.3092389191033158" ixy="-3.506989978445303e-17" iyz="-9.234108403291408e-18" ixz="0.0004093544297322068" />
+        </inertial>
+        <visual name="Shoulder-Link_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Shoulder-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Shoulder-Link_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Shoulder-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="Elbow-Joint-and-Link">
+        <inertial>
+            <origin xyz="8.326190024101203e-17 0.11837701241500734 -0.0010274533686445084" rpy="0.0 0.0 0.0" />
+            <mass value="15.001594648533375" />
+            <inertia ixx="0.16264109999518533" iyy="0.015206765903014535" izz="0.15974461529292128" ixy="1.3877787807814457e-17" iyz="-0.0018245968547323018" ixz="-7.386181414824649e-18" />
+        </inertial>
+        <visual name="Elbow-Joint-and-Link_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Elbow-Joint-and-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Elbow-Joint-and-Link_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Elbow-Joint-and-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="Joint-4">
+        <inertial>
+            <origin xyz="1.383333493341685e-17 0.029473388866815973 -0.0007057803847417577" rpy="0.0 0.0 0.0" />
+            <mass value="3.275828988003383" />
+            <inertia ixx="0.005421023673768468" iyy="0.0020253324025299867" izz="0.004978001041959446" ixy="3.5128150388530344e-17" iyz="-6.814294202175148e-05" ixz="-2.5829630075539664e-19" />
+        </inertial>
+        <visual name="Joint-4_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-4.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Joint-4_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-4.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="Joint-5-6">
+        <inertial>
+            <origin xyz="0.040075044185615534 -1.7487803913315608e-17 -0.001478642351945427" rpy="0.0 0.0 0.0" />
+            <mass value="1.9729408903323196" />
+            <inertia ixx="0.0014457136996846522" iyy="0.0035348261165202913" izz="0.0027017305298768224" ixy="2.461115805533892e-19" iyz="1.8723645413468268e-18" ixz="0.0008781366014449223" />
+        </inertial>
+        <visual name="Joint-5-6_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-5-6.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Joint-5-6_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/Joint-5-6.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="End-Effector-Rotation-Link">
+        <inertial>
+            <origin xyz="5.76286354035921e-15 3.582207214302849e-17 0.039372292835333444" rpy="0.0 0.0 0.0" />
+            <mass value="1.7365396866148217" />
+            <inertia ixx="0.0013059008214124054" iyy="0.001305900821387982" izz="0.0012759165697515174" ixy="2.439454888092385e-18" iyz="4.739248514146325e-18" ixz="-1.9737734987440045e-16" />
+        </inertial>
+        <visual name="End-Effector-Rotation-Link_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/End-Effector-Rotation-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="End-Effector-Rotation-Link_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="file://$(find mycobot_description)/meshes/mycobot_280/End-Effector-Rotation-Link.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+
+<joint name="virtual_joint" type="fixed">
+		<parent link="world"/>
+		<child link="Base-Joint-1"/>
+		<origin xyz= "0 0 0" rpy = "0 0 0"/>  
+</joint>
+<joint name="base_link_to_link1" type="fixed">
+		<!-- Specifies the axis around which the joint could rotate if it wasn't fixed. -->
+		<axis xyz="0 0 0"/>
+		<!-- Specifies the range of allowed motion if the joint wasn't fixed. 
+			effort: Maximum torque in Nm 
+			lower: Minimum allowed angle in radians
+			upper: Maximum allowed angle in radians 
+			velocity: Maximum allowed angular velocity in radians per second (ignored for fixed joints) 
+		-->
+		<limit effort = "${effort}" lower = "${-pi}" upper = "${pi}" velocity = "${velocity}"/>
+		<!-- The link this joint connects to on one side -->
+		<parent link="Base-Joint-1"/>
+		<!-- The link this joint connects to on the other side -->
+		<child link="Joint-2"/>
+		<!-- The origin of the joint relative to the parent link's coordinate frame.
+			xyz: The position of the child link relative to the parent link's coordinate frame.
+			rpy: The orientation of the child link relative to the parent link's coordinate frame.
+			See these posts for more information on coordinate frames in robotics: 
+			https://automaticaddison.com/coordinate-frames-and-transforms-for-ros-based-mobile-robots/
+			https://automaticaddison.com/yaw-pitch-and-roll-diagrams-using-2d-coordinate-systems/
+		-->
+		<origin xyz= "0 0 0.130" rpy = "0 0 0"/>  
+</joint>
+<joint name="link1_to_link2" type="revolute">
+		<axis xyz="0 0 1"/>
+		<limit effort = "${effort}" lower = "-2.879793" upper = "2.879793" velocity = "${velocity}"/>
+		<parent link="Joint-2"/>
+		<child link="Shoulder-Link"/>
+		<origin xyz= "0 0 0.180" rpy = "0 0 0"/>  
+	</joint>
+<joint name="link2_to_link3" type="revolute">
+		<axis xyz="0 0 1"/>
+		<limit effort = "${effort}" lower = "-2.879793" upper = "2.879793" velocity = "${velocity}"/>
+		<parent link="Shoulder-Link"/>
+		<child link="Elbow-Joint-and-Link"/>
+		<origin xyz= "0.1453 0 0.579" rpy = "0 ${pi/2} ${-pi/2}"/>  
+	</joint>
+<joint name="link3_to_link4" type="revolute">
+		<axis xyz=" 0 0 1"/>
+		<limit effort = "${effort}" lower = "-2.879793" upper = "2.879793" velocity = "${velocity}"/>
+		<parent link="Elbow-Joint-and-Link"/>
+		<child link="Joint-4"/>
+		<origin xyz= "0.40517 0.0 0.72937" rpy = "0 0 0"/>
+	</joint>
+<joint name="link4_to_link5" type="revolute">
+		<axis xyz=" 0 0 1"/>
+		<limit effort = "${effort}" lower = "-2.879793" upper = "2.879793" velocity = "${velocity}"/>
+		<parent link="Joint-4"/>
+		<child link="Joint-5-6"/>
+		<origin xyz= "0.491 0.0 0.77937" rpy = "0 0 ${-pi/2}"/>
+	</joint>
+
+	<joint name="link5_to_link6" type="revolute">
+		<axis xyz=" 0 0 1"/>
+		<limit effort = "${effort}" lower = "-2.879793" upper = "2.879793" velocity = "${velocity}"/>
+		<parent link="Joint-5-6"/>
+		<child link="End-Effector-Rotation-Link"/>
+		<origin xyz= "0.6327 0.0 0.72807" rpy = "${pi/2} ${-pi/2} 0"/>
+	</joint>
+ 
+</robot>

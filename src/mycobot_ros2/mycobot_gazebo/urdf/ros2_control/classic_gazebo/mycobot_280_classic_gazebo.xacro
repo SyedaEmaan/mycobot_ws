@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="mycobot_280">
+    <!-- NO gazebo_ros2_control plugin - using direct PID control instead -->
+</robot>

@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+  test_one_joint.urdf — minimal one-joint URDF for verifying mycobot_csv.
+
+  Keep this file MINIMAL. The point is to isolate the plugin from URDF
+  complexity. Once the plugin is verified, swap to a real robot URDF.
+
+  EDIT BEFORE RUNNING:
+    1. <param name="ifname">       — your EtherCAT interface (`ip link`)
+    2. <param name="counts_per_rad"> — only matters for unit conversion
+                                       in the velocity command. If unsure,
+                                       a wrong value makes commanded rad/s
+                                       differ from actual rad/s by a constant
+                                       factor — but the joint will still move.
+                                       To verify the plugin you can leave the
+                                       default and just confirm "joint moves
+                                       when I publish nonzero, stops when zero".
+-->
+<robot name="mycobot_csv_test">
+
+  <link name="world"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.1 0.1 0.05"/></geometry>
+    </visual>
+  </link>
+
+  <joint name="base_fixed" type="fixed">
+    <parent link="world"/>
+    <child  link="base_link"/>
+  </joint>
+
+  <link name="link_1">
+    <visual>
+      <geometry><cylinder length="0.2" radius="0.03"/></geometry>
+      <origin xyz="0 0 0.1"/>
+    </visual>
+  </link>
+
+  <joint name="joint_1" type="continuous">
+    <parent link="base_link"/>
+    <child  link="link_1"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="2.0"/>
+  </joint>
+
+  <ros2_control name="MyCobotCSVSystem" type="system">
+
+    <hardware>
+      <plugin>mycobot_csv/MyCobotCSV</plugin>
+      <!-- EDIT: your EtherCAT interface name -->
+      <param name="ifname">enxc8a3623069bf</param>
+    </hardware>
+
+    <joint name="joint_1">
+      <param name="slave_index">1</param>
+      <!-- counts_per_rad: encoder counts per radian on output side.
+           Default below is a placeholder (17-bit × 100:1 / 2π).
+           Verify against your drive's datasheet if you care about the
+           absolute scale of velocity commands. -->
+      <param name="counts_per_rad">2085932.0</param>
+
+      <command_interface name="velocity">
+        <param name="min">-2.0</param>
+        <param name="max"> 2.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+  </ros2_control>
+
+</robot>

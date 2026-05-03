@@ -1,0 +1,117 @@
+# mycobot 280 — Run Commands
+
+Quick reference for launching the simulation. Two ways: Docker or native.
+
+---
+
+## Native (Ubuntu 22.04 host)
+
+### Launch the simulation
+
+```bash
+cd ~/mycobot_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch mycobot_moveit_config gazebo_moveit.py
+```
+
+### Rebuild after code changes
+
+```bash
+cd ~/mycobot_ws
+colcon build --symlink-install \
+  --packages-select \
+    mycobot_description \
+    mycobot_gazebo \
+    mycobot_moveit_config \
+    mycobot_interfaces
+source install/setup.bash
+```
+
+### Clean rebuild (when build cache breaks)
+
+```bash
+cd ~/mycobot_ws
+rm -rf build/ install/ log/
+colcon build --symlink-install \
+  --packages-select \
+    mycobot_description \
+    mycobot_gazebo \
+    mycobot_moveit_config \
+    mycobot_interfaces
+source install/setup.bash
+```
+
+### Save launch output to a file
+
+```bash
+ros2 launch mycobot_moveit_config gazebo_moveit.py 2>&1 | tee ~/launch_output.txt
+```
+
+---
+
+## Docker
+
+### Start the container
+
+```bash
+cd ~/RoboticArm_Workspace/docker_ws
+./run.sh
+```
+
+### Inside the container — launch
+
+```bash
+cd ~/arm_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch mycobot_moveit_config gazebo_moveit.py
+```
+
+### Inside the container — rebuild
+
+```bash
+cd ~/arm_ws
+colcon build --symlink-install \
+  --packages-select \
+    mycobot_description \
+    mycobot_gazebo \
+    mycobot_moveit_config \
+    mycobot_interfaces
+source install/setup.bash
+```
+
+---
+
+## Verification (in a second terminal, while sim is running)
+
+```bash
+# Source first
+source /opt/ros/humble/setup.bash
+source ~/mycobot_ws/install/setup.bash    # or ~/arm_ws/install/setup.bash in Docker
+
+# Check nodes are alive
+ros2 node list
+
+# Check controllers
+ros2 control list_controllers
+
+# Check the trajectory action
+ros2 action list | grep follow_joint_trajectory
+
+# Check OMPL is loaded
+ros2 param get /move_group ompl.planning_plugin
+```
+
+---
+
+## Auto-source on every terminal (optional)
+
+Add to `~/.bashrc`:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/mycobot_ws/install/setup.bash
+```
+
+Then `source ~/.bashrc` once, and future terminals are ready to launch directly.

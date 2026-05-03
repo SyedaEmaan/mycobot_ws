@@ -1,0 +1,24 @@
+# Controller configuration for mycobot_csv verification.
+#
+# Only ONE controller (forward_velocity_controller). User publishes
+# Float64MultiArray of velocities (rad/s) to its /commands topic.
+#
+# joint_state_broadcaster runs alongside so /joint_states publishes the
+# motor's encoder feedback.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 200          # Hz. simple_ng runs at 200 Hz (5 ms cycle).
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    forward_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+
+forward_velocity_controller:
+  ros__parameters:
+    joints:
+      - joint_1
+    interface_name: velocity

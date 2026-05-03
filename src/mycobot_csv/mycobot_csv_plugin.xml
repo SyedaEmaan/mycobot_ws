@@ -1,0 +1,11 @@
+<library path="mycobot_csv">
+  <class
+    name="mycobot_csv/MyCobotCSV"
+    type="mycobot_csv::MyCobotCSV"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control SystemInterface for Laifual L70I-E-100-BF in CiA 402
+      CSV mode (Cyclic Synchronous Velocity). Strict mirror of simple_ng.c.
+    </description>
+  </class>
+</library>
