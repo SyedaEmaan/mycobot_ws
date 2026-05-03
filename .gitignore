@@ -1,0 +1,26 @@
+build/
+install/
+log/
+
+# editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# CMake leftovers
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.o
+*.so
+
+# ROS-specific
+*.bag
+*.db3
