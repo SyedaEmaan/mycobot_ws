@@ -16,7 +16,7 @@ PRE-REQ: ros2_control_node must have cap_net_raw set:
 import os
 import yaml
 from launch import LaunchDescription
-from launch.actions import RegisterEventHandler, TimerAction
+from launch.actions import RegisterEventHandler, SetEnvironmentVariable, TimerAction
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -127,6 +127,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        # Pin RMW so ros2_control_node doesn't fail on missing cyclonedds.
+        SetEnvironmentVariable("RMW_IMPLEMENTATION", "rmw_fastrtps_cpp"),
         ros2_control_node,
         robot_state_publisher,
         spawn_jsb_delayed,
