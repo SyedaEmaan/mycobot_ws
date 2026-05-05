@@ -276,19 +276,23 @@ BringupResult MyCobotCSV::init_soem()
     }
 
     ec_groupt * grp = context_.grouplist + group_;
-    if (grp->Obytes != sizeof(csv_rxpdo_t)) {
+    /* Multi-slave: group buffer holds n_joints_ × per-slave struct */
+    const size_t expected_obytes = n_joints_ * sizeof(csv_rxpdo_t);
+    const size_t expected_ibytes = n_joints_ * sizeof(csv_txpdo_t);
+
+    if (grp->Obytes != expected_obytes) {
         RCLCPP_ERROR(logger_,
-            "Output PDO size mismatch: mapped %d bytes, expected %zu (csv_rxpdo_t). "
+            "Output PDO size mismatch: mapped %d bytes, expected %zu (= %zu joints × %zu bytes). "
             "Did slave_csv_config() succeed on every slave?",
-            grp->Obytes, sizeof(csv_rxpdo_t));
+            grp->Obytes, expected_obytes, n_joints_, sizeof(csv_rxpdo_t));
         ecx_close(&context_);
         return BringupResult::PDO_SIZE_MISMATCH;
     }
-    if (grp->Ibytes != sizeof(csv_txpdo_t)) {
+    if (grp->Ibytes != expected_ibytes) {
         RCLCPP_ERROR(logger_,
-            "Input PDO size mismatch: mapped %d bytes, expected %zu (csv_txpdo_t). "
+            "Input PDO size mismatch: mapped %d bytes, expected %zu (= %zu joints × %zu bytes). "
             "Did slave_csv_config() succeed on every slave?",
-            grp->Ibytes, sizeof(csv_txpdo_t));
+            grp->Ibytes, expected_ibytes, n_joints_, sizeof(csv_txpdo_t));
         ecx_close(&context_);
         return BringupResult::PDO_SIZE_MISMATCH;
     }
