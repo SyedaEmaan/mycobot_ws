@@ -82,10 +82,14 @@ and never touches `mycobot_280.urdf.xacro`.
 ## Commits (chronological)
 
 ```
+2944467  arm_controller: gentle PID gains for newly-real joint 2
+d852084  Phase B1: move link2_to_link3 from mock_arm to real_arm
+478d382  Zero-on-startup position offset for activation
+a076feb  docs: INTEGRATION_NOTES — Phase 3 bench-verification + multi-slave commands
 25865ad  mycobot_csv: Phase 3a — two-joint test scaffold
 de66ba6  mycobot_csv: PDO size check supports multiple slaves
 8eb85cd  Add INTEGRATION_NOTES.md — context, files, commands, open issues
-7cc2001  Step 5d: initialize mock command buffers to prevent NaN state   ← CAUSES SIGABRT, see Open Issues
+7cc2001  Step 5d: initialize mock command buffers to prevent NaN state
 532f4d6  Step 5c: bump default_velocity_scaling_factor 0.15 -> 0.5
 1f5b00f  Step 5b: bump default_velocity_scaling_factor 0.05 -> 0.15
 9ccb6e9  Step 5a: safer JTC gains, scaling, accel limits, RMW pin
@@ -114,7 +118,7 @@ git revert 7cc2001
 | 5 | Launch + verify hardware bring-up | done (joint 1 + 5 mock joints) |
 | 6 | Plan + execute trajectory in RViz | done — joint 1 plans and executes on real hardware from RViz |
 | Phase A | Bench-verify 2-motor multi-slave via `mycobot_csv` (no MoveIt) | done — see Multi-slave bench verification section |
-| Phase B | Integrate joint 2 into MoveIt (move from mock-arm to real-arm block) | pending |
+| Phase B | Integrate joint 2 into MoveIt (move from mock-arm to real-arm block) | done — see "Phase B — adding joint 2 to MoveIt" section |
 | Phase C | Repeat Phase B for joints 3, 4, 5, 6 (one at a time) | pending |
 
 ---
@@ -179,14 +183,16 @@ grep "<plugin>" /tmp/mycobot_280.urdf
 | Param | Value | Source |
 |---|---|---|
 | EtherCAT interface | `enxc8a3623069bf` | `mycobot_280.ros2_control.xacro` (real-arm `<param name="ifname">`) |
-| Joint 1 slave index | `1` | same file (`<param name="slave_index">`) |
-| Joint 1 counts_per_rad | `2085932.0` | placeholder, **needs calibration** before trusting velocity-command magnitudes |
-| Joint 1 motor velocity hard limit | `2.0 rad/s` | `<command_interface name="velocity">` `<param name="max">` |
+| Joint 1 (link1_to_link2) slave_index | `1` | `mycobot_280.ros2_control.xacro` (real-arm `<param name="slave_index">`) |
+| Joint 2 (link2_to_link3) slave_index | `2` | same file |
+| Joint 1+2 counts_per_rad | `2085932.0` (placeholder) | identical for both; slave 2 likely needs different value (calibration TODO) |
+| Position reporting semantics | **zero-on-startup** (deltas from activation pose) | `mycobot_csv.cpp` — `position_offset_counts_` captured in `on_activate`, subtracted in `read()` |
+| Motor velocity hard limit (per joint) | `2.0 rad/s` | `<command_interface name="velocity">` `<param name="max">` in real-arm block |
 | `default_velocity_scaling_factor` | `0.5` | `joint_limits.yaml` |
 | `link1_to_link2.max_velocity` | `2.7925270` rad/s (URDF default) | `joint_limits.yaml` |
 | `link1_to_link2.max_acceleration` | `1.0 rad/s²` | `joint_limits.yaml` |
-| arm_controller gains link1 | `{p: 5.0, d: 1.0, i: 0.0}` | `ros2_controllers.yaml` |
-| arm_controller gains links 2-6 | `{p: 100, d: 10, i: 0.01}` | `ros2_controllers.yaml` (mock — harmless) |
+| arm_controller gains, **real** joints (link1+link2) | `{p: 2.0, d: 0.05, i: 0.0}` | `ros2_controllers.yaml` — lowered after Phase B brought joint 2 online; aggressive d-term amplified encoder noise |
+| arm_controller gains, **mock** joints (link3-link6) | `{p: 100, d: 10, i: 0.01}` | `ros2_controllers.yaml` (mock — harmless) |
 | `controller_manager` `update_rate` | `100 Hz` | `ros2_controllers.yaml` |
 
 ### Speed-vs-safety math (with current values)
@@ -241,49 +247,24 @@ pkill -f "ros2 launch"   # or kill the parent shell
 
 ## Open issues — current state
 
-### Step 5d caused SIGABRT in `ros2_control_node`
+### Step 5d (`7cc2001`) — formerly suspected SIGABRT trigger; empirically resolved
 
-Commit `7cc2001` added `<param name="initial_value">0.0</param>` inside
-each `<command_interface>` of the mock-arm block, intending to fix RViz
-NaN-orientation errors caused by `mock_components/GenericSystem`
-integrating an uninitialized command buffer when `calculate_dynamics:
-true` is set.
+Originally observed: after commit `7cc2001` (`initialize mock command
+buffers to prevent NaN state`), `ros2_control_node` immediately exited
+with code -6 (SIGABRT) on `csv_moveit.py` launch.
 
-After that commit, `ros2_control_node` started but immediately exited
-with code -6 (SIGABRT). Bring-up never reached the controller spawn
-phase. The launch's other processes (move_group, rviz2,
-robot_state_publisher) came up fine — only the controller_manager
-aborted.
+Current state: that commit is still in the tree, and `csv_moveit.py`
+launches cleanly through Phase B4 with both real joints active. The
+original SIGABRT is no longer reproducing. Root cause was never
+isolated — likely a transient interaction with bus state / process
+state at the time, that the subsequent multi-slave PDO check fix
+(`de66ba6`) and zero-on-startup offset (`478d382`) happened to mask.
 
-**Most likely cause:** the installed Humble version of
-`mock_components/GenericSystem` does not accept `<param
-name="initial_value">` on `<command_interface>` — older releases
-silently ignored it; some versions assert / abort on unknown params.
-
-**Open paths to try next:**
-1. **Revert Step 5d** (`git revert 7cc2001`) and instead drop the
-   `<param name="calculate_dynamics">true</param>` line from the
-   mock-arm block. Position state for joints 2-6 will then stay at
-   their `initial_value` (0.0) regardless of commands — RViz
-   visualization renders fine, joint 1 still executes on real
-   hardware, mock-joint trajectory tracking is cosmetic only.
-2. **Read the actual SIGABRT log** before any code change:
-   ```bash
-   # After a (failed) launch:
-   ls -t ~/.ros/log/ | head -1
-   cat ~/.ros/log/<that-dir>/ros2_control_node-1-stdout.log
-   cat ~/.ros/log/<that-dir>/ros2_control_node-1-stderr.log
-   # Or grep the streamed log:
-   grep -nE "abort|terminate|what\\(\\)|Error|throw|ParameterAlreadyDeclaredException" /tmp/csv_moveit.log
-   ```
-   The exact assertion string would confirm or refute the theory.
-3. **Last resort:** reorder the mock-arm `<command_interface>` declarations
-   to use a different syntax variant (e.g. `<param name="initial_value">0</param>`
-   without the decimal, or as an attribute) that some versions accept.
-
-The pre-Step-5d behavior — bring-up succeeds, joint 1 moves, RViz spams
-NaN errors for downstream links — is functionally usable for joint-1
-testing but ugly for trajectory planning in RViz.
+If SIGABRT recurs, the original diagnosis paths still apply:
+revert `7cc2001` and drop `calculate_dynamics:true` from the mock-arm
+block; read `~/.ros/log/<latest>/ros2_control_node-1-stderr.log` for
+the actual abort reason; or try alternate syntax for the
+`initial_value` param.
 
 ### Pre-existing non-blocking errors (ignore)
 
@@ -493,3 +474,180 @@ The launch is long-lived. To stop:
 # Or from anywhere:
 pkill -f verify_two.launch.py
 ```
+
+---
+
+## Phase B — adding joint 2 to MoveIt
+
+**End state:** RViz can plan and execute trajectories involving both
+real joints (`link1_to_link2` slave 1, `link2_to_link3` slave 2). The
+remaining four arm joints + gripper are still on `mock_components`.
+Use this section as a template when adding joints 3-6 in Phase C — the
+sequence of failure modes here is what to expect for each.
+
+### B1. Move `link2_to_link3` from mock-arm to real-arm
+
+**Commit:** `d852084`
+**File:** `src/mycobot_ros2/mycobot_moveit_config/config/mycobot_280.ros2_control.xacro`
+
+Two parts in the same file:
+1. **Add** a `<joint name="link2_to_link3">` block to the real-arm
+   `<ros2_control>` block, modelled on the existing `link1_to_link2`
+   entry. Fields: `slave_index=2`, `counts_per_rad=2085932.0`
+   (placeholder, same as joint 1 — calibration TODO), velocity
+   `command_interface` with `min=-2.0`, `max=2.0`, plus position +
+   velocity state interfaces with `initial_value` from `initial_positions.yaml`.
+2. **Remove** the corresponding `<joint name="link2_to_link3">` block
+   from the mock-arm `<ros2_control>` block — claim ownership transfers
+   from mock to real with no overlap.
+
+Verification:
+```bash
+xacro $(ros2 pkg prefix mycobot_moveit_config)/share/mycobot_moveit_config/config/mycobot_280.urdf.xacro \
+  > /tmp/mycobot_280_phaseB.urdf
+grep -c '<ros2_control'   /tmp/mycobot_280_phaseB.urdf  # expect 2
+grep slave_index           /tmp/mycobot_280_phaseB.urdf  # expect values 1 and 2
+grep -c 'name="link2_to_link3"' /tmp/mycobot_280_phaseB.urdf  # expect 1
+```
+
+### B2. Build + URDF expansion check
+
+```bash
+colcon build --packages-select mycobot_moveit_config --symlink-install
+source install/setup.bash
+```
+
+### B3 (first attempt). Launch — bring-up clean, joint 2 outside URDF limits
+
+```bash
+ros2 launch mycobot_moveit_config csv_moveit.py
+```
+
+Bring-up reached `MyCobotCSV ACTIVE — 2 drive(s) operating`,
+`joint_state_broadcaster` and `arm_controller` activated, RViz opened.
+But `/joint_states` showed:
+
+```
+link1_to_link2:  2.568 rad
+link2_to_link3: -811.05 rad   ← outside URDF limit ±2.879793 rad
+```
+
+`link2_to_link3`'s URDF limit is `lower=-2.879793, upper=2.879793` (≈
+±π). Slave 2's absolute encoder reads ~-1.7×10⁹ counts; divided by the
+placeholder `counts_per_rad=2085932` that gives ~-811 rad. **MoveIt
+would refuse to plan from a state outside joint limits — Phase B4 was
+blocked.**
+
+This was *not* a `counts_per_rad` calibration miss — to bring -1.7×10⁹
+counts into ±π we'd need `counts_per_rad ≈ 1.7×10⁹`, three orders of
+magnitude beyond plausible. Slave 2 has a multi-turn absolute encoder
+that's wound far in one direction; no single calibration constant
+lands it inside ±π.
+
+### B-fix. Zero-on-startup position offset (plugin change)
+
+**Commit:** `478d382`
+**Files:** `src/mycobot_csv/include/mycobot_csv/mycobot_csv.hpp`,
+`src/mycobot_csv/src/mycobot_csv.cpp`
+
+Implemented "zero-on-startup" semantics: capture each joint's
+`position_actual` at the end of `on_activate()` and subtract it from
+all subsequent reads. Reported position becomes a *delta from
+activation pose*, starting at 0.
+
+Five-edit summary (all minimal):
+1. **Header**: add member `std::vector<int32_t> position_offset_counts_;`
+2. **`on_init`**: zero-initialize the new vector with size `n_joints_`.
+3. **`on_activate`** (between `enable_drive` loop and ACTIVE log): one
+   explicit `fieldbus_roundtrip()` to refresh `txpdo_`, then for each
+   joint capture `position_offset_counts_[i] = txpdo_[s]->position_actual`.
+   Log each capture: `Joint <i> (slave <s>): position offset captured = <N> counts`.
+4. **`on_activate` init-read**: subtract the offset before storing
+   `last_position_counts_` and computing `hw_positions_` (so JSB's
+   first published message is consistent with subsequent `read()` cycles).
+5. **`read()`**: subtract the offset from `txpdo_[s]->position_actual`
+   before converting counts to radians. The velocity calculation
+   (delta-based) is offset-invariant.
+
+Single-slave path (1 joint, 1 slave) is unchanged in behavior:
+`position_offset_counts_[0]` captures whatever the encoder reads at
+activation and subtracts it — for a freshly-zeroed test rig that's 0
+and the math is identical to before.
+
+Regression-tested via `verify_two.launch.py`:
+- Both joints report ~0 rad at startup (microradian residuals from
+  PDO-cycle noise between offset capture and first `read()`).
+- Phase 3d Test 1 (`{0.05, 0.0}` for 2 s) still gives joint_1 delta
+  ≈ +0.15 rad, joint_2 unchanged.
+
+### B3 (redo). Launch with offset fix
+
+Logs now include the per-joint capture lines:
+
+```
+Joint 0 (slave 1): position offset captured = 5662772 counts
+Joint 1 (slave 2): position offset captured = -1691793728 counts
+MyCobotCSV ACTIVE — 2 drive(s) operating in CSV mode.
+```
+
+`/joint_states` reports both real joints near 0 rad. RViz shows the
+robot in a sane pose. MoveIt is willing to plan.
+
+### B4 (first attempt). Joint 2 jerks during arm_controller activation
+
+When the JTC claimed `link2_to_link3/velocity` and started running its
+control loop, joint 2's motor jerked violently — before any RViz plan
+was sent. Diagnosis: `link2_to_link3` had inherited the mock-default
+gains `{p:100, d:10, i:0.01}` from when it was a mock joint. With
+`d=10`, the JTC's derivative term amplifies encoder ticking noise into
+big velocity-command spikes the moment the controller activates.
+
+### B-tune. Lower PID gains for both real joints
+
+**Commit:** `2944467`
+**File:** `src/mycobot_ros2/mycobot_moveit_config/config/ros2_controllers.yaml`
+
+Both real joints now use:
+
+```yaml
+link1_to_link2: {p: 2.0, d: 0.05, i: 0.0}
+link2_to_link3: {p: 2.0, d: 0.05, i: 0.0}
+```
+
+- `p=2`: 1 rad position error → 2 rad/s velocity command (right at the
+  drive's hard limit). Worst typical transient: `1.40 + 0.10 + 0.005
+  ≈ 1.5 rad/s` — comfortably under 2.0.
+- `d=0.05`: 20× lower than joint 1's previous `d=1`, 200× lower than
+  the mock-default `d=10`. Cuts derivative-amplified encoder noise
+  proportionally.
+- `i=0`: prevents integrator wind-up during slow tracking.
+
+Mock joints 3-6 keep `{p:100, d:10, i:0.01}` — `mock_components` has
+no real dynamics, aggressive gains are harmless there.
+
+### B4 (success). RViz plan + execute on joint 2
+
+After all three commits in this section landed (`d852084`, `478d382`,
+`2944467` — plus the implicit dependency on the earlier multi-slave
+PDO check `de66ba6`), `csv_moveit.py` launches cleanly and RViz can
+plan and execute small trajectories on either real joint. Joint 1 and
+joint 2 both move on commanded plan; mock joints 3-6 + gripper render
+at their initial poses.
+
+### Lessons that should generalize to Phase C (joints 3-6)
+
+1. **`counts_per_rad` placeholders are not safe to copy across drives.**
+   Each new slave needs treating as un-calibrated until verified. The
+   zero-on-startup offset masks the absolute-position issue but does
+   *not* fix the gain of angle reporting.
+2. **Mock-default gains are toxic on real drives.** When migrating a
+   joint from mock to real, drop its arm_controller PID gains to
+   `{p:2, d:0.05, i:0}` *in the same commit* as the URDF migration —
+   saves a power-cycle of the drive after a violent jerk.
+3. **Capture the position offset in `on_activate`, not `on_init`.**
+   The encoder is only readable once the bus is OPERATIONAL and the
+   drive is enabled. `on_init` runs before any of that.
+4. **Verify each migration via `verify_two.launch.py` first** (or
+   `verify_three.launch.py` etc. as joints accumulate). Raw
+   forward_velocity_controller bench tests catch plugin-level
+   regressions without MoveIt's stack on top — easier to diagnose.
