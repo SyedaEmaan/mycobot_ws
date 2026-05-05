@@ -19,7 +19,7 @@ arm_controller:
       - link6_to_link6flange
     
     command_interfaces:
-      - position
+      - velocity
       
     state_interfaces:
       - position
