@@ -37,6 +37,8 @@
              Velocity command interface keeps the trajectory controller
              interface uniform across all 6 arm joints; gripper stays on
              position because moveit_controllers.yaml uses GripperCommand.
+             initial_value on each command_interface prevents NaN states
+             at activation when calculate_dynamics integrates the buffer.
              ============================================================ -->
         <ros2_control name="${name}_mock_arm" type="system">
             <hardware>
@@ -47,42 +49,54 @@
             </hardware>
 
             <joint name="link2_to_link3">
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link2_to_link3']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link3_to_link4">
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link3_to_link4']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link4_to_link5">
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link4_to_link5']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link5_to_link6">
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link5_to_link6']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link6_to_link6flange">
-                <command_interface name="velocity"/>
+                <command_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link6_to_link6flange']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="gripper_controller">
-                <command_interface name="position"/>
+                <command_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['gripper_controller']}</param>
                 </state_interface>
