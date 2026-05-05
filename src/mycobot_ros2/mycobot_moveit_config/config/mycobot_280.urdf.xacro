@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mycobot_280">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
 
-    <xacro:include filename="$(find mycobot_gazebo)/urdf/ros2_control/gazebo/mycobot_280.urdf" />
+    <xacro:include filename="$(find mycobot_description)/urdf/mycobot_280_urdf.xacro" />
 
     <xacro:include filename="mycobot_280.ros2_control.xacro" />
 
