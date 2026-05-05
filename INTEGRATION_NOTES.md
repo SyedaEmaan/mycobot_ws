@@ -82,6 +82,9 @@ and never touches `mycobot_280.urdf.xacro`.
 ## Commits (chronological)
 
 ```
+25865ad  mycobot_csv: Phase 3a — two-joint test scaffold
+de66ba6  mycobot_csv: PDO size check supports multiple slaves
+8eb85cd  Add INTEGRATION_NOTES.md — context, files, commands, open issues
 7cc2001  Step 5d: initialize mock command buffers to prevent NaN state   ← CAUSES SIGABRT, see Open Issues
 532f4d6  Step 5c: bump default_velocity_scaling_factor 0.15 -> 0.5
 1f5b00f  Step 5b: bump default_velocity_scaling_factor 0.05 -> 0.15
@@ -108,8 +111,11 @@ git revert 7cc2001
 | 2 | Update ros2_control.xacro (hybrid CSV+mock) + switch geometry include | done |
 | 3 | `command_interfaces: position → velocity` | done |
 | 4 | Create `csv_moveit.py` launch | done |
-| 5 | Launch + verify hardware bring-up | partial — see Open Issues |
-| 6 | Plan + execute trajectory in RViz | pending |
+| 5 | Launch + verify hardware bring-up | done (joint 1 + 5 mock joints) |
+| 6 | Plan + execute trajectory in RViz | done — joint 1 plans and executes on real hardware from RViz |
+| Phase A | Bench-verify 2-motor multi-slave via `mycobot_csv` (no MoveIt) | done — see Multi-slave bench verification section |
+| Phase B | Integrate joint 2 into MoveIt (move from mock-arm to real-arm block) | pending |
+| Phase C | Repeat Phase B for joints 3, 4, 5, 6 (one at a time) | pending |
 
 ---
 
@@ -310,9 +316,10 @@ old runtime URDF sources:
 ## Verification protocol for `mycobot_csv` (independent of MoveIt)
 
 If something goes wrong with joint 1 specifically, fall back to the
-verified single-joint launch and check against the protocol in
-`src/mycobot_csv/docs/VERIFICATION.md`. If `verify.launch.py` doesn't
-work, the bug is upstream of the MoveIt integration.
+single-joint launch (`verify.launch.py`) or the two-joint launch
+(`verify_two.launch.py`) and check against the protocol in
+`src/mycobot_csv/docs/VERIFICATION.md`. If neither works, the bug is
+upstream of the MoveIt integration.
 
 ```bash
 ros2 launch mycobot_csv verify.launch.py
@@ -326,3 +333,163 @@ ros2 launch mycobot_csv verify.launch.py
 
 If this passes and `csv_moveit.py` doesn't, the bug is in the MoveIt
 wrapping, not the plugin.
+
+**Note: while two slaves are physically on the bus, `verify.launch.py`
+(single-joint) will correctly fail with `PDO_SIZE_MISMATCH` — the
+plugin's PDO size check now scales with `n_joints_`, and 1 declared
+joint vs 2 mapped slaves is a real mismatch. Use `verify_two.launch.py`
+in that situation.**
+
+---
+
+## Multi-slave bench verification (`verify_two`)
+
+Phase A of multi-motor expansion: validate that the plugin handles two
+EtherCAT slaves correctly **before** wiring the second motor into MoveIt.
+Uses the raw `forward_velocity_controller` (no JTC, no MoveIt) so the
+test only exercises the plugin's per-slave PDO mapping, not trajectory
+control.
+
+### Files (all under `src/mycobot_csv/`)
+
+| File | Purpose |
+|---|---|
+| `urdf/test_two_joints.urdf` | 2-joint URDF, slaves 1 and 2, both Laifual L70I-E-100-BF placeholder calibration |
+| `config/controllers_two.yaml` | JSB + `forward_velocity_controller` listing both joints, `update_rate: 200` |
+| `launch/verify_two.launch.py` | rsp + ros2_control_node + JSB on `TimerAction(4.0)` + forward_velocity_controller chained on JSB exit |
+
+The single-joint files (`test_one_joint.urdf`, `controllers.yaml`,
+`verify.launch.py`) are **untouched** — they remain the verified
+single-joint baseline.
+
+### Launch
+
+```bash
+cd ~/mycobot_ws
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+source install/setup.bash
+ros2 launch mycobot_csv verify_two.launch.py 2>&1 | tee /tmp/verify_two.log
+```
+
+Expected bring-up log lines (in order):
+```
+EtherCAT: 2 slave(s) discovered.
+Slave 1: OPERATION_ENABLED, brake released. position_actual=<int> counts.
+Slave 2: OPERATION_ENABLED, brake released. position_actual=<int> counts.
+MyCobotCSV ACTIVE — 2 drive(s) operating in CSV mode.
+[spawner] Configured and activated joint_state_broadcaster
+[spawner] Configured and activated forward_velocity_controller
+```
+
+If you see two WARN lines about `enable() in FAULT state (sw=0x1008),
+resetting`, that is normal recovery — the plugin's `CW_FAULT_RESET`
+ran successfully and the drives transitioned to OPERATION_ENABLED.
+
+### Bench-test commands
+
+In a second terminal (after the launch is up):
+
+```bash
+source ~/mycobot_ws/install/setup.bash
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+# Helper: capture both joint positions cleanly (header + 2 values)
+capture() {
+  ros2 topic echo /joint_states --once 2>/dev/null \
+    | grep -A2 "^position:" | head -3
+}
+```
+
+#### Test 1 — joint_1 only
+
+```bash
+echo "=== Test 1: joint_1 only ==="
+echo "BEFORE:" ; capture
+
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.05, 0.0]}"
+sleep 2
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.0, 0.0]}"
+sleep 0.3
+
+echo "AFTER:" ; capture
+```
+
+Expected: joint_1 delta ≈ +0.15 rad, joint_2 unchanged (the +0.15 vs.
+the nominal +0.10 = 0.05 rad/s × 2s is publish-overhead; `ros2 topic
+pub --once` takes ~0.5 s to set up before publishing, so the actual
+on-time is ~3 s).
+
+#### Test 2 — joint_2 only
+
+```bash
+echo "=== Test 2: joint_2 only ==="
+echo "BEFORE:" ; capture
+
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.0, 0.05]}"
+sleep 2
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.0, 0.0]}"
+sleep 0.3
+
+echo "AFTER:" ; capture
+```
+
+Expected: joint_2 delta ≈ +0.15 rad, joint_1 unchanged.
+
+#### Test 3 — both joints, opposite directions, simultaneously
+
+```bash
+echo "=== Test 3: both joints, opposite directions ==="
+echo "BEFORE:" ; capture
+
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.05, -0.05]}"
+sleep 2
+ros2 topic pub --once /forward_velocity_controller/commands \
+  std_msgs/msg/Float64MultiArray "{data: [0.0, 0.0]}"
+sleep 0.3
+
+echo "AFTER:" ; capture
+```
+
+Expected: joint_1 delta ≈ +0.15 rad, joint_2 delta ≈ −0.15 rad. Both
+move simultaneously (within one PDO cycle).
+
+### What the three tests prove
+
+| Test | Demonstrates |
+|---|---|
+| 1 | joint_1 (slave 1) responds to its own command. joint_2 (slave 2) holds station when commanded zero. No cross-talk slave1 → slave2. |
+| 2 | joint_2 (slave 2) responds to its own command. joint_1 (slave 1) holds station. No cross-talk slave2 → slave1. |
+| 3 | Both slaves can be commanded in the same cycle. Direction signs honored independently. PDO mapping is correct per-slave. |
+
+### Open calibration concern (slave 2)
+
+Slave 2's reported encoder position at startup is on the order of
+−1.7 × 10⁹ counts (vs. ~5 × 10⁶ for slave 1). With the placeholder
+`counts_per_rad = 2085932.0` shared by both joints, slave 2's reported
+absolute angle is ≈ −811 rad — clearly an artifact of the placeholder
+calibration, not a real angle. **Visually, joint 1 rotates more than
+joint 2 for the same numerical command** because slave 2's real
+counts_per_rad differs from the placeholder. The numerical delta
+matches the command magnitude on both joints (round-trip
+self-consistency through the same wrong constant), but the *physical*
+motion differs.
+
+This is a calibration task, not a plugin bug. Address before tightening
+trajectory tracking on joint 2 — a wrong `counts_per_rad` makes the
+physical and commanded velocities differ by a constant factor, which
+the JTC's PID will fight against.
+
+### Stop / kill
+
+The launch is long-lived. To stop:
+
+```bash
+# In the launch terminal: Ctrl-C
+# Or from anywhere:
+pkill -f verify_two.launch.py
+```
