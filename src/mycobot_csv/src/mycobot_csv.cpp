@@ -561,6 +561,7 @@ hardware_interface::CallbackReturn MyCobotCSV::on_init(
     joint_to_slave_.assign(n_joints_, 0);
     counts_per_rad_.assign(n_joints_, 0.0);
     last_position_counts_.assign(n_joints_, 0);
+    position_offset_counts_.assign(n_joints_, 0);
 
     int max_slave = 0;
     for (size_t i = 0; i < n_joints_; ++i) {
@@ -663,9 +664,28 @@ hardware_interface::CallbackReturn MyCobotCSV::on_activate(
         }
     }
 
+    // Capture per-joint zero offset (zero-on-startup semantics).
+    // One explicit PDO roundtrip ensures txpdo_ reflects current positions.
+    {
+        int wkc = fieldbus_roundtrip();
+        if (wkc < 0) {
+            RCLCPP_ERROR(logger_,
+                "Failed PDO roundtrip when capturing position offsets (wkc=%d)", wkc);
+            close_soem();
+            return hardware_interface::CallbackReturn::ERROR;
+        }
+        for (size_t i = 0; i < n_joints_; ++i) {
+            const int s = joint_to_slave_[i];
+            position_offset_counts_[i] = txpdo_[s]->position_actual;
+            RCLCPP_INFO(logger_,
+                "Joint %zu (slave %d): position offset captured = %d counts",
+                i, s, position_offset_counts_[i]);
+        }
+    }
+
     for (size_t i = 0; i < n_joints_; ++i) {
         int s = joint_to_slave_[i];
-        int32_t cnt = txpdo_[s]->position_actual;
+        int32_t cnt = txpdo_[s]->position_actual - position_offset_counts_[i];
         last_position_counts_[i]  = cnt;
         hw_positions_[i]          = static_cast<double>(cnt) / counts_per_rad_[i];
         hw_velocities_[i]         = 0.0;
@@ -698,7 +718,7 @@ hardware_interface::return_type MyCobotCSV::read(
 
     for (size_t i = 0; i < n_joints_; ++i) {
         int s = joint_to_slave_[i];
-        int32_t cnt = txpdo_[s]->position_actual;
+        int32_t cnt = txpdo_[s]->position_actual - position_offset_counts_[i];
 
         hw_positions_[i]  = static_cast<double>(cnt) / counts_per_rad_[i];
         hw_velocities_[i] =

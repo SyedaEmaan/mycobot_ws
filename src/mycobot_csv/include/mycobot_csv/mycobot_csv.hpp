@@ -194,6 +194,7 @@ private:
   std::vector<int>     joint_to_slave_;
   std::vector<double>  counts_per_rad_;
   std::vector<int32_t> last_position_counts_;
+  std::vector<int32_t> position_offset_counts_;
 
   std::string ifname_;
   size_t      n_joints_{0};
