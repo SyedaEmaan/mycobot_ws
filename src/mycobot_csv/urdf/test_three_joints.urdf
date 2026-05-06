@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<robot name="mycobot_csv_test_three">
+
+  <link name="world"/>
+
+  <link name="base_link">
+    <visual><geometry><box size="0.1 0.1 0.05"/></geometry></visual>
+  </link>
+
+  <joint name="base_fixed" type="fixed">
+    <parent link="world"/>
+    <child  link="base_link"/>
+  </joint>
+
+  <link name="link_1">
+    <visual><geometry><cylinder length="0.2" radius="0.03"/></geometry>
+    <origin xyz="0 0 0.1"/></visual>
+  </link>
+
+  <joint name="joint_1" type="continuous">
+    <parent link="base_link"/>
+    <child  link="link_1"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="2.0"/>
+  </joint>
+
+  <link name="link_2">
+    <visual><geometry><cylinder length="0.15" radius="0.025"/></geometry>
+    <origin xyz="0 0 0.075"/></visual>
+  </link>
+
+  <joint name="joint_2" type="continuous">
+    <parent link="link_1"/>
+    <child  link="link_2"/>
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="100" velocity="2.0"/>
+  </joint>
+
+  <link name="link_3">
+    <visual><geometry><cylinder length="0.10" radius="0.020"/></geometry>
+    <origin xyz="0 0 0.05"/></visual>
+  </link>
+
+  <joint name="joint_3" type="continuous">
+    <parent link="link_2"/>
+    <child  link="link_3"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="100" velocity="2.0"/>
+  </joint>
+
+  <ros2_control name="MyCobotCSVThreeJoints" type="system">
+
+    <hardware>
+      <plugin>mycobot_csv/MyCobotCSV</plugin>
+      <param name="ifname">enxc8a3623069bf</param>
+    </hardware>
+
+    <joint name="joint_1">
+      <param name="slave_index">1</param>
+      <param name="counts_per_rad">2085932.0</param>
+      <command_interface name="velocity">
+        <param name="min">-2.0</param>
+        <param name="max"> 2.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint_2">
+      <param name="slave_index">2</param>
+      <param name="counts_per_rad">2085932.0</param>
+      <command_interface name="velocity">
+        <param name="min">-2.0</param>
+        <param name="max"> 2.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint_3">
+      <param name="slave_index">3</param>
+      <param name="counts_per_rad">2085932.0</param>
+      <command_interface name="velocity">
+        <param name="min">-2.0</param>
+        <param name="max"> 2.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+  </ros2_control>
+
+</robot>
