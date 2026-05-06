@@ -14,7 +14,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import TimerAction
+from launch.actions import SetEnvironmentVariable, TimerAction
 
 
 def generate_launch_description():
@@ -66,6 +66,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        SetEnvironmentVariable("RMW_IMPLEMENTATION", "rmw_fastrtps_cpp"),
         ros2_control_node,
         robot_state_publisher,
         joint_state_broadcaster_spawner,

@@ -1,9 +1,9 @@
 """
-verify_two.launch.py — two-joint CSV verification.
+verify_four.launch.py — four-joint CSV verification.
 
-Same structure as verify.launch.py but uses test_two_joints.urdf and
-controllers_two.yaml. forward_velocity_controller takes a Float64MultiArray
-of two velocities (one per joint).
+Same structure as verify_three.launch.py but uses test_four_joints.urdf and
+controllers_four.yaml. forward_velocity_controller takes a Float64MultiArray
+of four velocities (one per joint).
 """
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -15,11 +15,11 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_share = get_package_share_directory("mycobot_csv")
-    urdf_file = os.path.join(pkg_share, "urdf", "test_two_joints.urdf")
+    urdf_file = os.path.join(pkg_share, "urdf", "test_four_joints.urdf")
     with open(urdf_file, "r") as f:
         robot_description_content = f.read()
 
-    controllers_yaml = os.path.join(pkg_share, "config", "controllers_two.yaml")
+    controllers_yaml = os.path.join(pkg_share, "config", "controllers_four.yaml")
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
