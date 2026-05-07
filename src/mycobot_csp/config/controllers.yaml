@@ -1,0 +1,25 @@
+# Controller configuration for mycobot_csp verification.
+#
+# Only ONE controller (forward_position_controller). User publishes
+# Float64MultiArray of absolute joint positions (rad) to its /commands topic.
+# The drive runs the position loop internally — no host-side PID needed.
+#
+# joint_state_broadcaster runs alongside so /joint_states publishes the
+# motor's encoder feedback.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 200          # Hz. Matches the drive's 5 ms interpolation period (0x60C2).
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    forward_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - joint_1
+    interface_name: position

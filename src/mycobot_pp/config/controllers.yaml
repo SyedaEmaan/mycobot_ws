@@ -1,0 +1,23 @@
+# Controller configuration for mycobot_pp verification.
+#
+# Forward position controller — user publishes Float64MultiArray of
+# absolute joint positions (rad) to /forward_position_controller/commands.
+# The drive runs PP-mode trajectory generation; the plugin handles the
+# bit-4 (new set-point) handshake transparently.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 200          # Hz. 5 ms cycle matches drive 0x60C2 period.
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    forward_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - joint_1
+    interface_name: position

@@ -1,0 +1,11 @@
+<library path="mycobot_csp">
+  <class
+    name="mycobot_csp/MyCobotCSP"
+    type="mycobot_csp::MyCobotCSP"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control SystemInterface for Laifual L70I-E-100-BF in CiA 402
+      CSP mode (Cyclic Synchronous Position). Sibling of mycobot_csv.
+    </description>
+  </class>
+</library>

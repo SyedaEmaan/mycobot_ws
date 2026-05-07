@@ -1,0 +1,12 @@
+<library path="mycobot_pp">
+  <class
+    name="mycobot_pp/MyCobotPP"
+    type="mycobot_pp::MyCobotPP"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control SystemInterface for Laifual L70I-E-100-BF in CiA 402
+      Profile Position mode (mode 1). Position command via 0x607A with
+      bit-4 (new set-point) handshake.
+    </description>
+  </class>
+</library>

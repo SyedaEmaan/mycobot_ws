@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  test_one_joint.urdf — minimal one-joint URDF for verifying mycobot_pp.
+
+  Profile Position mode (CiA 402 mode 1). Drive does the trajectory
+  generation; master streams target_position via 0x607A and toggles
+  controlword bit 4 to commit each new setpoint.
+
+  EDIT BEFORE RUNNING:
+    1. <param name="ifname">       — your EtherCAT interface (`ip link`)
+    2. <param name="counts_per_rad"> — encoder counts per output radian
+-->
+<robot name="mycobot_pp_test">
+
+  <link name="world"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.1 0.1 0.05"/></geometry>
+    </visual>
+  </link>
+
+  <joint name="base_fixed" type="fixed">
+    <parent link="world"/>
+    <child  link="base_link"/>
+  </joint>
+
+  <link name="link_1">
+    <visual>
+      <geometry><cylinder length="0.2" radius="0.03"/></geometry>
+      <origin xyz="0 0 0.1"/>
+    </visual>
+  </link>
+
+  <joint name="joint_1" type="continuous">
+    <parent link="base_link"/>
+    <child  link="link_1"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="2.0"/>
+  </joint>
+
+  <ros2_control name="MyCobotPPSystem" type="system">
+
+    <hardware>
+      <plugin>mycobot_pp/MyCobotPP</plugin>
+      <param name="ifname">enxc8a3623069bf</param>
+    </hardware>
+
+    <joint name="joint_1">
+      <param name="slave_index">1</param>
+      <param name="counts_per_rad">2085932.0</param>
+
+      <command_interface name="position">
+        <param name="min">-100.0</param>
+        <param name="max"> 100.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+  </ros2_control>
+
+</robot>

@@ -52,6 +52,18 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
+            <joint name="link4_to_link5">
+                <param name="slave_index">4</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['link4_to_link5']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
         </ros2_control>
 
         <!-- ============================================================
@@ -72,15 +84,6 @@
                 <param name="calculate_dynamics">true</param>
             </hardware>
 
-            <joint name="link4_to_link5">
-                <command_interface name="velocity">
-                    <param name="initial_value">0.0</param>
-                </command_interface>
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['link4_to_link5']}</param>
-                </state_interface>
-                <state_interface name="velocity"/>
-            </joint>
             <joint name="link5_to_link6">
                 <command_interface name="velocity">
                     <param name="initial_value">0.0</param>
