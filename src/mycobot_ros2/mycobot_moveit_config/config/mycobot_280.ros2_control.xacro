@@ -5,21 +5,15 @@
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <!-- ============================================================
-             Hardware Block 1: Real EtherCAT drives on joints 1, 3, 4
-             (slaves 1, 3, 4). Slave 2 is on the bus but its drive has a
-             persistent vendor-specific fault (0x603F=0x002E, encoder
-             multi-turn-lost) that the firmware doesn't expose a clear
-             SDO for — link2_to_link3 is therefore handled by the mock
-             block below. When slave 2 is recovered (vendor configurator
-             or encoder battery replacement), move link2_to_link3 back
-             into this block.
+             Hardware Block 1: Real EtherCAT drives on joints 1–4
+             (slaves 1–4).
              ============================================================ -->
         <ros2_control name="${name}_real_arm" type="system">
             <hardware>
                 <plugin>mycobot_csv/MyCobotCSV</plugin>
                 <!-- EDIT: change ifname to your EtherCAT interface
                      (run `ip link` to find it; commonly enxNNN... for USB-Eth) -->
-                <param name="ifname">enxc817f55f06f6</param>
+                <param name="ifname">enx00e04c360d9d</param>
             </hardware>
 
             <joint name="link1_to_link2">
@@ -31,6 +25,18 @@
                 </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link1_to_link2']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="link2_to_link3">
+                <param name="slave_index">2</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['link2_to_link3']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
@@ -61,7 +67,7 @@
         </ros2_control>
 
         <!-- ============================================================
-             Hardware Block 2: Mock joints 2, 5, 6 + gripper
+             Hardware Block 2: Mock joints 5, 6 + gripper
              mock_components/GenericSystem echoes commands as state, so
              these joints "track" perfectly without real hardware.
              Velocity command interface keeps the trajectory controller
@@ -69,8 +75,6 @@
              position because moveit_controllers.yaml uses GripperCommand.
              initial_value on each command_interface prevents NaN states
              at activation when calculate_dynamics integrates the buffer.
-             link2_to_link3 is here only because slave 2 is faulted
-             (see Block 1 header) — move it back to Block 1 once recovered.
              ============================================================ -->
         <ros2_control name="${name}_mock_arm" type="system">
             <hardware>
@@ -80,15 +84,6 @@
                 <param name="calculate_dynamics">true</param>
             </hardware>
 
-            <joint name="link2_to_link3">
-                <command_interface name="velocity">
-                    <param name="initial_value">0.0</param>
-                </command_interface>
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['link2_to_link3']}</param>
-                </state_interface>
-                <state_interface name="velocity"/>
-            </joint>
             <joint name="link5_to_link6">
                 <command_interface name="velocity">
                     <param name="initial_value">0.0</param>

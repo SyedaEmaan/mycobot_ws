@@ -266,24 +266,6 @@ BringupResult MyCobotCSV::init_soem()
                      s, info_.joints[i].name.c_str());
     }
 
-    /* === WORKAROUND-SLAVE2-START ===
-       Slave 2 has a persistent vendor fault (0x603F=0x002E, multi-turn
-       lost) and is excluded from joint_to_slave_ via the xacro. But it's
-       still on the EtherCAT bus, and grp->Obytes/Ibytes after
-       ec_config_map_group counts every slave on the bus — including
-       slave 2's default ESI PDOs. Configuring every bus slave with the
-       same CSV PDO layout keeps the size check exact. Bus slaves not in
-       joint_to_slave_ are PDO-mapped but never CiA-402-enabled.
-       TODO: delete this block and the matching one near expected_obytes
-       once slave 2 is recovered (restore link2_to_link3 to real_arm in
-       mycobot_280.ros2_control.xacro). */
-    for (int s = 1; s <= context_.slavecount; ++s) {
-        if (context_.slavelist[s].PO2SOconfig == nullptr) {
-            context_.slavelist[s].PO2SOconfig = &MyCobotCSV::slave_csv_config;
-        }
-    }
-    /* === WORKAROUND-SLAVE2-END === */
-
     ecx_config_map_group(&context_, io_map_, group_);
 
     for (size_t i = 0; i < n_joints_; ++i) {
@@ -295,20 +277,8 @@ BringupResult MyCobotCSV::init_soem()
 
     ec_groupt * grp = context_.grouplist + group_;
     /* Multi-slave: group buffer holds n_joints_ × per-slave struct */
-    size_t expected_obytes = n_joints_ * sizeof(csv_rxpdo_t);
-    size_t expected_ibytes = n_joints_ * sizeof(csv_txpdo_t);
-
-    /* === WORKAROUND-SLAVE2-START ===
-       The PO2SOconfig loop above also configures CSV PDO layout on bus
-       slaves that aren't in joint_to_slave_, so their bytes show up in
-       grp->Obytes/Ibytes too. Add their contribution to the expected size.
-       TODO: delete this block once slave 2 is recovered. */
-    if (context_.slavecount > (int)n_joints_) {
-        const size_t extra = (size_t)(context_.slavecount - (int)n_joints_);
-        expected_obytes += extra * sizeof(csv_rxpdo_t);
-        expected_ibytes += extra * sizeof(csv_txpdo_t);
-    }
-    /* === WORKAROUND-SLAVE2-END === */
+    const size_t expected_obytes = n_joints_ * sizeof(csv_rxpdo_t);
+    const size_t expected_ibytes = n_joints_ * sizeof(csv_txpdo_t);
 
     if (grp->Obytes != expected_obytes) {
         RCLCPP_ERROR(logger_,
