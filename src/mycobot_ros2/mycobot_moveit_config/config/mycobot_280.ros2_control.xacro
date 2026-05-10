@@ -5,11 +5,16 @@
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <!-- ============================================================
-             Hardware Block 1: Real EtherCAT drives on joints 1–5
-             (slaves 1–5). Slaves 1–3 are big motors (1650 mN·m rated),
-             slaves 4–5 are small wrist motors (200 mN·m rated).
-             Slave 6 (joint 6) is not yet wired; link6_to_link6flange
-             stays mocked below.
+             Hardware Block 1: Real EtherCAT drives on all six joints.
+             Slaves 1–3 are big motors (1650 mN·m rated), slaves 4–6
+             are small wrist motors (200 mN·m rated).
+
+             The wrist daisy-chain is wired non-monotonically: bus
+             slaves 4,5,6 physically actuate joints 5,6,4 respectively.
+             slave_index below remaps each URDF wrist joint to the bus
+             slave that drives it (verified by per-slave spot-test +
+             matching slaveinfo topology — slave 5 has Activeports
+             0.1.0.0, propagation-delay jumps at slaves 4 and 6).
              ============================================================ -->
         <ros2_control name="${name}_real_arm" type="system">
             <hardware>
@@ -56,7 +61,7 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link4_to_link5">
-                <param name="slave_index">4</param>
+                <param name="slave_index">6</param>
                 <param name="counts_per_rad">2085932.0</param>
                 <command_interface name="velocity">
                     <param name="min">-2.0</param>
@@ -68,7 +73,7 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="link5_to_link6">
-                <param name="slave_index">5</param>
+                <param name="slave_index">4</param>
                 <param name="counts_per_rad">2085932.0</param>
                 <command_interface name="velocity">
                     <param name="min">-2.0</param>
@@ -79,35 +84,33 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-        </ros2_control>
-
-        <!-- ============================================================
-             Hardware Block 2: Mock joint 6 + gripper
-             mock_components/GenericSystem echoes commands as state, so
-             these joints "track" perfectly without real hardware.
-             Velocity command interface keeps the trajectory controller
-             interface uniform across all 6 arm joints; gripper stays on
-             position because moveit_controllers.yaml uses GripperCommand.
-             initial_value on each command_interface prevents NaN states
-             at activation when calculate_dynamics integrates the buffer.
-             ============================================================ -->
-        <ros2_control name="${name}_mock_arm" type="system">
-            <hardware>
-                <plugin>mock_components/GenericSystem</plugin>
-                <!-- mock_components can synthesize position state from velocity
-                     commands; this flag asks it to do the integration. -->
-                <param name="calculate_dynamics">true</param>
-            </hardware>
-
             <joint name="link6_to_link6flange">
+                <param name="slave_index">5</param>
+                <param name="counts_per_rad">2085932.0</param>
                 <command_interface name="velocity">
-                    <param name="initial_value">0.0</param>
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
                 </command_interface>
                 <state_interface name="position">
                     <param name="initial_value">${initial_positions['link6_to_link6flange']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
+        </ros2_control>
+
+        <!-- ============================================================
+             Hardware Block 2: Mock gripper only.
+             gripper_controller stays on position interface because
+             moveit_controllers.yaml uses GripperCommand.
+             initial_value on the command_interface prevents NaN states
+             at activation when calculate_dynamics integrates the buffer.
+             ============================================================ -->
+        <ros2_control name="${name}_mock_arm" type="system">
+            <hardware>
+                <plugin>mock_components/GenericSystem</plugin>
+                <param name="calculate_dynamics">true</param>
+            </hardware>
+
             <joint name="gripper_controller">
                 <command_interface name="position">
                     <param name="initial_value">0.0</param>
