@@ -68,7 +68,7 @@
 
     <hardware>
       <plugin>mycobot_csv/MyCobotCSV</plugin>
-      <param name="ifname">enxc8a3623069bf</param>
+      <param name="ifname">enx00e04c360d9d</param>
     </hardware>
 
     <joint name="joint_1">
