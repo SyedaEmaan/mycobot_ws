@@ -41,6 +41,15 @@
         <joint name="link5_to_link6" value="0"/>
         <joint name="link6_to_link6flange" value="0"/>
     </group_state>
+    <!-- Demo-safe pose: every joint stays within ~45° of home (<60° cap). -->
+    <group_state name="generic" group="arm">
+        <joint name="link1_to_link2"       value="0.5"/>
+        <joint name="link2_to_link3"       value="-0.5"/>
+        <joint name="link3_to_link4"       value="0.8"/>
+        <joint name="link4_to_link5"       value="0.5"/>
+        <joint name="link5_to_link6"       value="0.0"/>
+        <joint name="link6_to_link6flange" value="0.0"/>
+    </group_state>
     <group_state name="open" group="gripper">
         <joint name="gripper_controller" value="0"/>
     </group_state>
