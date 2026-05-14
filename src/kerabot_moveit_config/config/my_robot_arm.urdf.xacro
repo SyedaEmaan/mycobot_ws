@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="my_robot_arm">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+
+    <xacro:include filename="$(find kerabot_description)/urdf/kerabot.urdf.xacro" />
+
+    <xacro:include filename="kerabot.ros2_control.xacro" />
+
+    <xacro:kerabot_ros2_control name="KerabotHardware" initial_positions_file="$(arg initial_positions_file)"/>
+</robot>

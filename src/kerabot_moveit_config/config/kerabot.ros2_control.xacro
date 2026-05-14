@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="kerabot_ros2_control" params="name initial_positions_file">
+        <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
+
+        <!--
+            Real EtherCAT drives on all six joints via mycobot_csv plugin.
+            Same daisy-chain wiring as mycobot: bus slaves 1,2,3 drive
+            joint1..joint3 in order; slaves 4,5,6 physically actuate
+            joint5, joint6, joint4 respectively (wrist remap).
+            Confirm against your slaveinfo if anything moves wrong.
+        -->
+        <ros2_control name="${name}_real_arm" type="system">
+            <hardware>
+                <plugin>mycobot_csv/MyCobotCSV</plugin>
+                <!-- EDIT: change ifname to your EtherCAT interface
+                     (run `ip link` to find it; commonly enxNNN... for USB-Eth) -->
+                <param name="ifname">enx00e04c360d9d</param>
+            </hardware>
+
+            <joint name="joint1">
+                <param name="slave_index">1</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint1']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint2">
+                <param name="slave_index">2</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint2']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint3">
+                <param name="slave_index">3</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint3']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint4">
+                <param name="slave_index">6</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint4']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint5">
+                <param name="slave_index">4</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint5']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="joint6">
+                <param name="slave_index">5</param>
+                <param name="counts_per_rad">2085932.0</param>
+                <command_interface name="velocity">
+                    <param name="min">-2.0</param>
+                    <param name="max"> 2.0</param>
+                </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['joint6']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+        </ros2_control>
+
+    </xacro:macro>
+</robot>

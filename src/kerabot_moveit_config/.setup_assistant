@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: kerabot_description
+    relative_path: urdf/kerabot.urdf.xacro
+  srdf:
+    relative_path: config/my_robot_arm.srdf
+  package_settings:
+    author_name: emaan
+    author_email: syedaemaan2004@gmail.com
+    generated_timestamp: 1778756565
