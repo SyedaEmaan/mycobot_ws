@@ -26,9 +26,9 @@ arm_controller:
       - velocity
     
     gains:
-      link1_to_link2:       {p: 2.0, d: 0.05, i: 0.0}
-      link2_to_link3:       {p: 2.0, d: 0.05, i: 0.0}
-      link3_to_link4:       {p: 2.0, d: 0.05, i: 0.0}
-      link4_to_link5:       {p: 2.0, d: 0.05, i: 0.0}
-      link5_to_link6:       {p: 2.0, d: 0.05, i: 0.0}
-      link6_to_link6flange: {p: 2.0, d: 0.05, i: 0.0}
+      link1_to_link2:       {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
+      link2_to_link3:       {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
+      link3_to_link4:       {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
+      link4_to_link5:       {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
+      link5_to_link6:       {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
+      link6_to_link6flange: {p: 2.0, d: 0.05, i: 0.0, ff_velocity_scale: 1.0}
